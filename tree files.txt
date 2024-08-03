@@ -1,0 +1,13 @@
+arthro_insight/
+├── app.py
+├── models/
+│   └── model.pkl
+├── static/
+│   ├── css/
+│   │   └── styles.css
+│   └── js/
+│       └── main.js
+└── templates/
+    ├── welcome.html
+    ├── predict.html
+    └── results.html

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OsteoFuture - Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/welcome_styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#testimonials">Testimonials</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="OsteoFuture Logo">
+            </div>
+            <h1>Welcome to OsteoFuture</h1>
+            <p>Your innovative tool for predicting the likelihood of joint replacement surgery in osteoarthritis patients over the next five years.</p>
+        </header>
+        <main>
+            <section id="about" class="intro">
+                <h2>About OsteoFuture</h2>
+                <p>Welcome to OsteoFuture, your innovative tool for predicting the likelihood of joint replacement surgery in osteoarthritis patients over the next five years. Designed to assist healthcare professionals in managing osteoarthritis more effectively, OsteoFuture offers data-driven insights to guide treatment decisions and improve patient outcomes.</p>
+                <a href="{{ url_for('predict') }}" class="cta-button">Get Started</a>
+            </section>
+            <section id="features" class="features">
+                <h2>Features</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <h3>Personalised Predictions</h3>
+                        <p>OsteoFuture provides tailored predictions based on individual patient data, including clinical, demographic, and lifestyle factors to estimate the need for joint replacement surgery.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Comprehensive Assessment</h3>
+                        <p>The tool evaluates a wide range of variables, including the severity of osteoarthritis, patient mobility, and pain levels, to deliver a thorough risk assessment.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>User-Friendly Interface</h3>
+                        <p>Easy to use and navigate, OsteoFuture is designed for both clinicians and researchers, integrating seamlessly into clinical workflows and patient consultations.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Development Insights</h3>
+                        <p>OsteoFuture was developed by a team of experts in rheumatology, orthopaedics, and data science. Utilising a large dataset of osteoarthritis patients, we trained advanced machine learning models to predict the likelihood of joint replacement surgery accurately. Our model was rigorously validated to ensure precision and reliability, making OsteoFuture a trusted resource for healthcare providers.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Export Results</h3>
+                        <p>Export your results in various formats, including DOCX, PDF, and PNG.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Light and Dark Mode</h3>
+                        <p>Switch between light and dark modes to suit your preference.</p>
+                    </div>
+                </div>
+            </section>
+            <section id="testimonials" class="testimonials">
+                <h2>Testimonials</h2>
+                <div class="testimonial-list">
+                    <div class="testimonial-item">
+                        <p>"OsteoFuture provided me with an accurate prediction and helped me prepare for my surgery. Highly recommend!"</p>
+                        <h4>John Doe</h4>
+                    </div>
+                    <div class="testimonial-item">
+                        <p>"The interface is so easy to use and the results were spot on. Great tool for anyone considering joint replacement."</p>
+                        <h4>Jane Smith</h4>
+                    </div>
+                </div>
+            </section>
+            <section id="contact" class="contact">
+                <h2>Contact Us</h2>
+                <p>If you have any questions or need support, feel free to reach out to us.</p>
+                <form action="{{ url_for('contact') }}" method="POST">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message:</label>
+                        <textarea id="message" name="message" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="cta-button">Send Message</button>
+                </form>
+            </section>
+        </main>
+        <footer>
+            <div class="footer-content">
+                <p>&copy; 2024 OsteoFuture. All rights reserved.</p>
+                <ul class="social-links">
+                    <li><a href="#"><img src="{{ url_for('static', filename='images/facebook.png') }}" alt="Facebook"></a></li>
+                    <li><a href="#"><img src="{{ url_for('static', filename='images/twitter.png') }}" alt="Twitter"></a></li>
+                    <li><a href="#"><img src="{{ url_for('static', filename='images/linkedin.png') }}" alt="LinkedIn"></a></li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+    <button id="theme-toggle" class="theme-toggle">
+        <span class="theme-toggle-dark">🌙</span>
+        <span class="theme-toggle-light">☀️</span>
+    </button>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>

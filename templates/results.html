@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OsteoFuture - Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OsteoFuture Results</h1>
+            <p>Joint Replacement Prediction Analysis</p>
+        </header>
+        <main>
+            <section class="results-summary">
+                <h2>Prediction Results</h2>
+                <div class="best-model-card result-card">
+                    <h3>{{ best_model_name }}</h3>
+                    <p class="prediction">{{ "%.2f"|format(results[best_model_name] * 100) }}%</p>
+                    <p>likelihood of joint replacement</p>
+                </div>
+                <div class="summary">
+                    <h3>Model Summary</h3>
+                    <p>Precision: {{ "%.4f"|format(results_df.loc[best_model_name]['Precision']) }}</p>
+                    <p>Accuracy: {{ "%.4f"|format(results_df.loc[best_model_name]['Accuracy']) }}</p>
+                    <p>Recall: {{ "%.4f"|format(results_df.loc[best_model_name]['Recall']) }}</p>
+                    <p>F1 Score: {{ "%.4f"|format(results_df.loc[best_model_name]['F1 Score']) }}</p>
+                    <p>AUC: {{ "%.4f"|format(results_df.loc[best_model_name]['AUC']) }}</p>
+                </div>
+            </section>
+            <section class="charts">
+                <h2>Visualization</h2>
+                <canvas id="resultsChart"></canvas>
+            </section>
+            <section class="model-performance">
+                <h2>Model Performance</h2>
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Precision</th>
+                            <th>Accuracy</th>
+                            <th>Recall</th>
+                            <th>F1 Score</th>
+                            <th>AUC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model, metrics in results_df.iterrows() %}
+                            <tr class="{% if model == best_model_name %}best-model{% endif %}">
+                                <td>{{ model }}</td>
+                                <td>{{ "%.4f"|format(metrics['Precision']) }}</td>
+                                <td>{{ "%.4f"|format(metrics['Accuracy']) }}</td>
+                                <td>{{ "%.4f"|format(metrics['Recall']) }}</td>
+                                <td>{{ "%.4f"|format(metrics['F1 Score']) }}</td>
+                                <td>{{ "%.4f"|format(metrics['AUC']) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+            <section class="export-options">
+                <h2>Export Results</h2>
+                <form id="export-form">
+                    <select name="format" id="export-format">
+                        <option value="docx">Word Document (DOCX)</option>
+                        <option value="pdf">PDF</option>
+                        <option value="png">PNG Image</option>
+                    </select>
+                    <button type="submit" class="export-button">Export</button>
+                </form>
+            </section>
+            <section class="new-prediction">
+                <h2>New Prediction</h2>
+                <a href="{{ url_for('predict') }}" class="cta-button">Create New Prediction</a>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2024 OsteoFuture. All rights reserved.</p>
+            <p>Total patients in the training dataset: {{ total_patients }}</p>
+        </footer>
+    </div>
+    <button id="theme-toggle" class="theme-toggle">
+        <span class="theme-toggle-dark">🌙</span>
+        <span class="theme-toggle-light">☀️</span>
+    </button>
+    <script>
+        const ctx = document.getElementById('resultsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ results.keys()|list|tojson }},
+                datasets: [{
+                    label: 'Likelihood of Joint Replacement',
+                    data: {{ results.values()|list|tojson }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1
+                    }
+                }
+            }
+        });
+
+        document.getElementById('export-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const format = document.getElementById('export-format').value;
+            fetch('/export_results', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `format=${format}&results={{ results|tojson|urlencode }}&input_data={{ input_data|tojson|urlencode }}`,
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `osteofuture_results.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>

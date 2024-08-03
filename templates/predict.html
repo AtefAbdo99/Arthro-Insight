@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OsteoFuture - Predict</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OsteoFuture Prediction</h1>
+            <p>Enter your health information for joint replacement prediction</p>
+        </header>
+        <main>
+            <form action="{{ url_for('predict') }}" method="post" class="prediction-form">
+                {% for feature, categories in feature_categories.items() %}
+                    <div class="form-group">
+                        <label for="{{ feature }}">{{ feature }}</label>
+                        <select name="{{ feature }}" id="{{ feature }}" required>
+                            <option value="">Select an option</option>
+                            {% for category in categories %}
+                                <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
+                {% for feature, range_values in numeric_ranges.items() %}
+                    <div class="form-group">
+                        <label for="{{ feature }}">{{ feature }}</label>
+                        <select name="{{ feature }}" id="{{ feature }}" required>
+                            <option value="">Select a value</option>
+                            {% for value in range_values %}
+                                <option value="{{ value }}">{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
+                <button type="submit" class="submit-button">Predict</button>
+            </form>
+        </main>
+        <footer>
+            <p>&copy; 2024 OsteoFuture. All rights reserved.</p>
+        </footer>
+    </div>
+    <button id="theme-toggle" class="theme-toggle">
+        <span class="theme-toggle-dark">🌙</span>
+        <span class="theme-toggle-light">☀️</span>
+    </button>
+</body>
+</html>
