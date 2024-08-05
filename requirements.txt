@@ -1,0 +1,10 @@
+flask
+gunicorn
+pandas
+numpy
+joblib
+matplotlib
+seaborn
+io
+docx
+reportlab
