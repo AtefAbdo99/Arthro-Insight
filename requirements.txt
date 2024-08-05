@@ -5,6 +5,5 @@ numpy
 joblib
 matplotlib
 seaborn
-docx
 reportlab
 python-docx
