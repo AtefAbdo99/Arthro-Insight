@@ -1,7 +1,17 @@
+import os
+# Set environment variables to limit thread usage
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 import pandas as pd
 import numpy as np
 import joblib
+import matplotlib
+matplotlib.use('Agg')  # Use Agg backend to avoid threading issues
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
@@ -9,29 +19,43 @@ from docx import Document
 from docx.shared import Inches
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from functools import lru_cache
 
 app = Flask(__name__)
 
+# Lazy loading of models and data
+preprocessor = None
+top_features = None
+models = {}
+results_df = None
+total_patients = 0
 
-preprocessor = joblib.load('Results_for_App/preprocessor.pkl')
-top_features = joblib.load('Results_for_App/top_features.pkl')
+def load_preprocessor():
+    global preprocessor
+    if preprocessor is None:
+        preprocessor = joblib.load('Results_for_App/preprocessor.pkl')
+    return preprocessor
 
+def load_top_features():
+    global top_features
+    if top_features is None:
+        top_features = joblib.load('Results_for_App/top_features.pkl')
+    return top_features
 
-models = {
-    'Logistic Regression': joblib.load('Results_for_App/Logistic_Regression.pkl'),
-    'Kernel SVM': joblib.load('Results_for_App/Kernel_SVM.pkl'),
-    'Decision Tree': joblib.load('Results_for_App/Decision_Tree.pkl'),
-    'Random Forest': joblib.load('Results_for_App/Random_Forest.pkl'),
-    'Naïve Bayes': joblib.load('Results_for_App/Naïve_Bayes.pkl'),
-    'XGBoost': joblib.load('Results_for_App/XGBoost.pkl'),
-    'NGBoost': joblib.load('Results_for_App/NGBoost.pkl'),
-    'LightGBM': joblib.load('Results_for_App/LightGBM.pkl'),
-    'CatBoost': joblib.load('Results_for_App/CatBoost.pkl')
-}
+def load_model(model_name):
+    if model_name not in models:
+        models[model_name] = joblib.load(f'Results_for_App/{model_name.replace(" ", "_")}.pkl')
+    return models[model_name]
 
-results_df = pd.read_csv('Results_for_App/model_results.csv', index_col=0)
+@lru_cache(maxsize=1)
+def load_results_df():
+    return pd.read_csv('Results_for_App/model_results.csv', index_col=0)
 
-total_patients = len(pd.read_csv('Results_for_App/model_results.csv'))
+def get_total_patients():
+    global total_patients
+    if total_patients == 0:
+        total_patients = len(load_results_df())
+    return total_patients
 
 feature_categories = {
     'Above weight cut-off for age/gender group': ['No', 'Yes'],
@@ -84,7 +108,6 @@ def welcome():
 
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
-    global total_patients
     if request.method == 'POST':
         input_data = request.form.to_dict()
         
@@ -97,9 +120,12 @@ def predict():
         
         input_df = pd.DataFrame([input_data])
         
+        preprocessor = load_preprocessor()
+        top_features = load_top_features()
+        
         missing_cols = set(preprocessor.feature_names_in_) - set(input_df.columns)
         for col in missing_cols:
-            input_df[col] = 0  # Default value for missing columns, can be adjusted as necessary
+            input_df[col] = 0  # Default value for missing columns
         
         processed_data = preprocessor.transform(input_df)
         
@@ -107,22 +133,20 @@ def predict():
         processed_data = processed_data[:, top_feature_indices]
         
         predictions = {}
-        for model_name, model in models.items():
-            prediction = model.predict_proba(processed_data)[:, 1][0]  # Probability of the positive class
-            predictions[model_name] = float(prediction)  # Convert to float for JSON serialization
+        for model_name in ['Logistic Regression', 'Kernel SVM', 'Decision Tree', 'Random Forest', 'Naïve Bayes', 'XGBoost', 'NGBoost', 'LightGBM', 'CatBoost']:
+            model = load_model(model_name)
+            prediction = model.predict_proba(processed_data)[:, 1][0]
+            predictions[model_name] = float(prediction)
         
-        total_patients += 1 
-        best_model_name = get_best_model(predictions)  
+        best_model_name = get_best_model(predictions)
         
         return render_template('results.html', results=predictions, input_data=input_df.to_dict(orient='records')[0], 
-                               results_df=results_df, total_patients=total_patients, best_model_name=best_model_name)
+                               results_df=load_results_df(), total_patients=get_total_patients(), best_model_name=best_model_name)
     
     return render_template('predict.html', top_features=list(feature_categories.keys()) + list(numeric_ranges.keys()), feature_categories=feature_categories, numeric_ranges=numeric_ranges)
 
 def get_best_model(predictions):
-    
-    best_model_name = max(predictions, key=predictions.get)
-    return best_model_name
+    return max(predictions, key=predictions.get)
 
 @app.route('/contact', methods=['POST'])
 def contact():
@@ -223,5 +247,5 @@ def create_results_chart(results):
     plt.tight_layout()
 
 if __name__ == '__main__':
-    app.run(debug=True)
-    app.run(host='0.0.0.0', port=8080)
+    app.run(debug=False)  # Set debug to False in production
+    app.run(host='0.0.0.0', port=8080, threaded=False)  # Disable threading
